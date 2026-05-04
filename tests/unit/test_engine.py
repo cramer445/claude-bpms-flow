@@ -128,3 +128,14 @@ class TestEngineCompleteTask:
 
         pending = engine.get_pending_tasks(result.id)
         assert len(pending) == 0
+
+
+@pytest.mark.unit
+class TestEngineErrors:
+    def test_start_instance_nonexistent_process_raises(self, engine: ProcessEngine):
+        with pytest.raises(FileNotFoundError):
+            engine.start_instance("nonexistent")
+
+    def test_complete_task_nonexistent_task_raises(self, engine: ProcessEngine):
+        with pytest.raises(ValueError):
+            engine.complete_task("nonexistent")

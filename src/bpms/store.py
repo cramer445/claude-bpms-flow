@@ -107,3 +107,10 @@ class Store:
                 completed_at=t.get("completed_at"),
             ))
         return tasks
+
+    def list_instances(self) -> list[ProcessInstance]:
+        """列出所有流程实例。"""
+        instances = []
+        for path in sorted(self._instances_dir.glob("*.json")):
+            instances.append(self.load_instance(path.stem))
+        return instances

@@ -3,7 +3,7 @@
 import uuid
 from datetime import datetime, timezone
 
-from bpms.models import ProcessDefinition
+from bpms.models import NodeType, ProcessDefinition
 from bpms.models.instance import ProcessInstance, ProcessStatus, TaskInstance, TaskStatus
 from bpms.store import Store
 
@@ -31,22 +31,25 @@ class ProcessEngine:
 
         # 从 start 节点流转到第一个 user_task，设置 current_node_id
         start_node = pd.nodes[pd.start_node_id]
-        next_node_id = start_node.outgoing[0]
-        next_node = pd.nodes[next_node_id]
-        instance.current_node_id = next_node_id
+        if start_node.outgoing:
+            next_node_id = start_node.outgoing[0]
+            next_node = pd.nodes[next_node_id]
+            instance.current_node_id = next_node_id
 
-        # 先保存实例文件（save_task 依赖实例文件已存在）
-        self.store.save_instance(instance)
+            # 先保存实例文件（save_task 依赖实例文件已存在）
+            self.store.save_instance(instance)
 
-        if next_node.node_type.value == "user_task":
-            task = TaskInstance(
-                id=uuid.uuid4().hex[:8],
-                process_instance_id=instance.id,
-                node_id=next_node_id,
-                assignee=next_node.assignee or "",
-                started_at=datetime.now(timezone.utc).isoformat(),
-            )
-            self.store.save_task(instance.id, task)
+            if next_node.node_type == NodeType.USER_TASK:
+                task = TaskInstance(
+                    id=uuid.uuid4().hex[:8],
+                    process_instance_id=instance.id,
+                    node_id=next_node_id,
+                    assignee=next_node.assignee or "",
+                    started_at=datetime.now(timezone.utc).isoformat(),
+                )
+                self.store.save_task(instance.id, task)
+        else:
+            self.store.save_instance(instance)
 
         return instance
 
@@ -60,19 +63,19 @@ class ProcessEngine:
         task.status = TaskStatus.COMPLETED
         task.completed_at = datetime.now(timezone.utc).isoformat()
 
-        # 流转到下一节点（只更新 current_node_id 和 status）
+        # 流转到下一节点
         self._advance(instance, pd)
 
         # 先保存实例（避免覆盖任务）
         self.store.save_instance(instance)
 
-        # 再保存已完成的任务（此时实例文件已存在）
+        # 再保存已完成的任务
         self.store.save_task(instance.id, task)
 
         # 如果下一节点是 user_task，创建新任务
         if instance.current_node_id and instance.status == ProcessStatus.RUNNING:
             next_node = pd.nodes[instance.current_node_id]
-            if next_node.node_type.value == "user_task":
+            if next_node.node_type == NodeType.USER_TASK:
                 new_task = TaskInstance(
                     id=uuid.uuid4().hex[:8],
                     process_instance_id=instance.id,
@@ -95,10 +98,7 @@ class ProcessEngine:
 
     def _advance(self, instance: ProcessInstance, pd: ProcessDefinition) -> None:
         """从当前节点流转到下一节点，仅更新 current_node_id 和 status。"""
-        if instance.current_node_id == "":
-            current = pd.nodes[pd.start_node_id]
-        else:
-            current = pd.nodes[instance.current_node_id]
+        current = pd.nodes[instance.current_node_id]
 
         if not current.outgoing:
             return
@@ -107,13 +107,12 @@ class ProcessEngine:
         next_node = pd.nodes[next_node_id]
         instance.current_node_id = next_node_id
 
-        if next_node.node_type.value == "end":
+        if next_node.node_type == NodeType.END:
             instance.status = ProcessStatus.COMPLETED
 
     def _find_instance_by_task(self, task_id: str) -> ProcessInstance:
         """通过任务 ID 找到所属实例。"""
-        for path in self.store._instances_dir.glob("*.json"):
-            instance = self.store.load_instance(path.stem)
+        for instance in self.store.list_instances():
             tasks = self.store.get_tasks_for_instance(instance.id)
             if any(t.id == task_id for t in tasks):
                 return instance
@@ -125,4 +124,4 @@ class ProcessEngine:
         for t in tasks:
             if t.id == task_id:
                 return t
-        raise ValueError(f"任务不存在: {task_id}")
+        raise ValueError(f"任务不属于实例 {instance_id}: {task_id}")
