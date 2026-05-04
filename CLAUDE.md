@@ -80,6 +80,25 @@ git push
 - 每个步骤一个独立提交，不要合并多个步骤
 - 提交前确认变更范围正确
 
+### 自动测试
+
+项目配置了 `git commit` 后自动运行测试的 hook（详见 `.claude/settings.json`）。
+每次 commit 后，hook 会自动分层运行 pytest（unit → integration → e2e），测试结果会注入到对话中。
+
+**测试结果查看方式：**
+
+| 内容 | 路径 |
+|------|------|
+| 摘要（注入 Claude 上下文） | 对话中自动显示 |
+| 详细 pytest 输出 | `.claude/hooks/last-test-output.log` |
+
+**如果测试失败：**
+1. 阅读对话中的测试报告摘要，确认哪一层失败
+2. 运行 `cat .claude/hooks/last-test-output.log` 查看详细错误信息
+3. 修复代码后重新 commit，hook 会再次触发测试
+
+**注意：** 如果某一层没有对应标记的测试（exit code 5），视为通过，不阻塞后续层级。
+
 ### 执行原则
 
 - 动手前先明确目标与验证标准
