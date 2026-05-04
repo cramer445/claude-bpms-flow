@@ -39,3 +39,6 @@ Thumbs.db
 # Hook artifacts
 .claude/hooks/last-test-output.log
 .claude/hooks/last-test-summary.txt
+
+# Git worktrees
+.worktrees/
