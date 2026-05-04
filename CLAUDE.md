@@ -24,17 +24,6 @@ pip install -e ".[dev]"
 
 # 启动
 python -m bpms
-
-# 运行全部测试
-pytest
-
-# 分层运行
-pytest -m unit              # 单元测试
-pytest -m integration       # 集成测试
-pytest -m e2e               # 端到端测试
-
-# 覆盖率
-pytest --cov=src/bpms --cov-report=term-missing
 ```
 
 ## 项目结构
@@ -100,6 +89,24 @@ git push
 **注意：** 如果某一层没有对应标记的测试（exit code 5），视为通过，不阻塞后续层级。
 
 **重要：** 所有测试执行由 hook 自动处理。写代码时不需要手动运行 pytest，commit 后 hook 会自动触发测试并报告结果。不要在实现功能的过程中穿插运行测试命令。
+
+### 需求迭代流程
+
+正常的功能迭代遵循以下循环：
+
+1. **理解需求** — 明确目标和验证标准，多步任务先列简要计划
+2. **编写测试** — 在 `tests/` 对应目录下添加测试用例（标注 `@pytest.mark.unit` 等标记）
+3. **实现代码** — 在 `src/bpms/` 中编写实现
+4. **提交** — `git add` + `git commit` + `git push`
+5. **查看测试结果** — commit 后 hook 自动运行测试，结果注入对话
+   - 测试通过 → 继续下一个需求
+   - 测试失败 → 运行 `cat .claude/hooks/last-test-output.log` 查看详细错误，修复后重新提交（回到第 4 步）
+
+```
+理解需求 → 编写测试 → 实现代码 → 提交 → hook 自动测试 ──┬── 通过 → 下一个需求
+                                                          │
+                                                          └── 失败 → 查看日志 → 修复 → 重新提交
+```
 
 ### 执行原则
 
