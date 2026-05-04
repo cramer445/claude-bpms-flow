@@ -1,0 +1,91 @@
+# CLAUDE.md
+
+本文档为 Claude Code 在此项目中的工作提供指引。
+
+## 项目概述
+
+BPMS 流程引擎服务 — 一个业务工作流/流程管理服务。
+
+## 技术栈
+
+- Python >= 3.10
+- pytest（测试框架，支持 unit / integration / e2e 分层）
+- ruff（代码检查与格式化）
+
+## 快速命令
+
+```bash
+# 初始化虚拟环境
+python3 -m venv .venv
+source .venv/bin/activate
+
+# 安装依赖
+pip install -e ".[dev]"
+
+# 启动
+python -m bpms
+
+# 运行全部测试
+pytest
+
+# 分层运行
+pytest -m unit              # 单元测试
+pytest -m integration       # 集成测试
+pytest -m e2e               # 端到端测试
+
+# 覆盖率
+pytest --cov=src/bpms --cov-report=term-missing
+```
+
+## 项目结构
+
+```
+├── docs/              # 项目文档
+├── src/bpms/          # 源代码
+├── tests/             # 测试代码
+│   ├── unit/          # 单元测试
+│   ├── integration/   # 集成测试
+│   └── e2e/           # 端到端测试
+├── .gitignore
+├── pyproject.toml     # 项目配置
+└── requirements-dev.txt
+```
+
+## 开发规范
+
+### 编码
+
+- 遵循 PEP 8，使用 ruff 检查
+- 提交信息使用简明中文，描述"做了什么"及"为什么"
+- 所有注释和文档使用中文
+- 最小化代码：只实现需求，不做多余抽象、多余容错
+
+### 修改原则
+
+- 只改动必要的文件，不要顺手优化无关代码
+- 改动产生的废弃引用需清理，已有的历史遗留代码不动
+- 代码风格与现有代码保持一致
+
+### 提交规范
+
+每个独立步骤完成后，执行以下命令提交并推送：
+
+```bash
+git add <变更文件>
+git commit -m "<简明中文提交信息>"
+git push
+```
+
+- 提交信息使用简明中文，描述"做了什么"及"为什么"
+- 每个步骤一个独立提交，不要合并多个步骤
+- 提交前确认变更范围正确
+
+### 执行原则
+
+- 动手前先明确目标与验证标准
+- 多步任务先列简要计划
+- 遇到歧义先提问，不要自行猜测
+
+## 文档索引
+
+- 项目文档：[docs/README.md](docs/README.md)
