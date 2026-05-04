@@ -32,11 +32,12 @@
 
 ## 上下文隔离
 
-subagent 通过 Agent tool 启动，拥有独立上下文：
+测试脚本将 pytest 的详细输出重定向到日志文件（`.claude/hooks/last-test-output.log`），
+只有简短摘要写入 stdout。Stop hook 读取摘要文件并注入 Claude 上下文，详细日志不污染主对话。
 
-- 接收自包含的 prompt（包含被修改文件列表、测试运行指令）
-- 测试详细日志不泄露到主对话
-- 仅返回简短摘要到主会话
+- 详细日志：`.claude/hooks/last-test-output.log`（完整 pytest 输出，供开发者查阅）
+- 摘要文件：`.claude/hooks/last-test-summary.txt`（一次性消费，注入后自动删除）
+- Claude 上下文：仅收到 5 行摘要
 
 ## 失败处理策略
 
@@ -56,9 +57,9 @@ subagent 通过 Agent tool 启动，拥有独立上下文：
 
 ## 技术实现
 
-- 在 `.claude/settings.json` 中配置 `post-commit` hook
-- hook 中定义一个 prompt，要求 Claude 使用 Agent tool 启动测试 subagent
-- subagent 使用 `general-purpose` 类型，拥有独立上下文
-- subagent 内部调用 Bash 运行 pytest，分层递进
+- 在 `.claude/settings.json` 中配置两个 hook：
+  1. `PostToolUse` hook 匹配 `Bash(git commit *)`，触发 `run-tests.sh` 运行测试
+  2. `Stop` hook 触发 `inject-test-results.sh`，读取摘要文件并注入 Claude 上下文
+- `run-tests.sh` 内部调用 pytest，将详细输出重定向到日志文件，stdout 只输出摘要
+- 摘要文件（`last-test-summary.txt`）被 Stop hook 消费后自动删除，避免重复注入
 - 失败时解析 pytest 输出，提取关键信息
-- 仅返回简短摘要到主会话
