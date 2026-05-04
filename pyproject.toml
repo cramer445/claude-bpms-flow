@@ -7,7 +7,7 @@ name = "bpms"
 version = "0.1.0"
 description = "BPMS Process Engine Service"
 requires-python = ">=3.10"
-dependencies = []
+dependencies = ["fastapi>=0.104", "uvicorn>=0.24"]
 
 [project.optional-dependencies]
 dev = [

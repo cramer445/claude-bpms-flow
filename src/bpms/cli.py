@@ -24,6 +24,10 @@ def create_parser() -> argparse.ArgumentParser:
     show_p = subparsers.add_parser("show", help="查看实例状态")
     show_p.add_argument("instance_id", help="流程实例 ID")
 
+    serve_p = subparsers.add_parser("serve", help="启动 Web 服务")
+    serve_p.add_argument("--host", default="127.0.0.1", help="监听地址")
+    serve_p.add_argument("--port", type=int, default=8000, help="监听端口")
+
     return parser
 
 
@@ -48,6 +52,10 @@ def run(args: list[str] | None = None) -> None:
         cmd_complete(engine, parsed.task_id)
     elif parsed.command == "show":
         cmd_show(engine, parsed.instance_id)
+    elif parsed.command == "serve":
+        from bpms.server import serve
+        serve(host=parsed.host, port=parsed.port)
+        return
 
 
 def _safe(engine, handler, *args):
