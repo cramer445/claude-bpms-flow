@@ -9,7 +9,9 @@
 
 ## 触发机制
 
-通过 `.claude/settings.json` 中的 hook 机制触发。当检测到 `Edit` 或 `Write` 工具修改了源代码文件后，触发测试 subagent。
+通过 `.claude/settings.json` 中的 `post-commit` hook 触发。每次 `git commit` 完成后，自动触发测试 subagent。
+
+`git commit` 是一个自然的工作里程碑，标志着一个独立任务/功能的完成。一次完整的需求实现过程中，只会在最终提交时触发一次测试，避免频繁打断开发流程。
 
 ## 测试流程：分层递进
 
@@ -52,7 +54,9 @@ subagent 通过 Agent tool 启动，拥有独立上下文：
 
 ## 技术实现
 
-- subagent 使用 `general-purpose` 类型
-- 通过 hook 机制在代码变更后自动触发
-- subagent 内部调用 Bash 运行 pytest
+- 在 `.claude/settings.json` 中配置 `post-commit` hook
+- hook 中定义一个 prompt，要求 Claude 使用 Agent tool 启动测试 subagent
+- subagent 使用 `general-purpose` 类型，拥有独立上下文
+- subagent 内部调用 Bash 运行 pytest，分层递进
 - 失败时解析 pytest 输出，提取关键信息
+- 仅返回简短摘要到主会话
