@@ -117,3 +117,5 @@ git push
 ## 文档索引
 
 - 项目文档：[docs/README.md](docs/README.md)
+- 流程引擎设计文档：[docs/superpowers/specs/2026-05-04-process-engine-design.md](docs/superpowers/specs/2026-05-04-process-engine-design.md)
+- 流程引擎实现计划：[docs/superpowers/plans/2026-05-04-process-engine-plan.md](docs/superpowers/plans/2026-05-04-process-engine-plan.md)
