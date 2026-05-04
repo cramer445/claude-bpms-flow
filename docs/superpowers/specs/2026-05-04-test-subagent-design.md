@@ -9,9 +9,11 @@
 
 ## 触发机制
 
-通过 `.claude/settings.json` 中的 `post-commit` hook 触发。每次 `git commit` 完成后，自动触发测试 subagent。
+通过 `.claude/settings.json` 中的 `PostToolUse` hook 触发。当检测到 `Bash` 工具执行了 `git commit` 命令后，触发测试 subagent。
 
 `git commit` 是一个自然的工作里程碑，标志着一个独立任务/功能的完成。一次完整的需求实现过程中，只会在最终提交时触发一次测试，避免频繁打断开发流程。
+
+> 注意：Claude Code 没有原生的 `PostCommit` 事件，需使用 `PostToolUse` 匹配 `Bash(git commit*)` 实现等效行为。
 
 ## 测试流程：分层递进
 
