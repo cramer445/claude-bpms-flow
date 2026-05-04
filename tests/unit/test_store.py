@@ -89,3 +89,29 @@ class TestStore:
     def test_load_nonexistent_instance_raises(self, store: Store):
         with pytest.raises(FileNotFoundError):
             store.load_instance("nonexistent")
+
+    def test_save_task_nonexistent_instance_raises(self, store: Store):
+        task = TaskInstance(id="task-001", process_instance_id="nonexistent", node_id="t1")
+        with pytest.raises(FileNotFoundError):
+            store.save_task("nonexistent", task)
+
+    def test_get_tasks_for_nonexistent_instance_raises(self, store: Store):
+        with pytest.raises(FileNotFoundError):
+            store.get_tasks_for_instance("nonexistent")
+
+    def test_save_task_update_existing(self, store: Store):
+        instance = ProcessInstance(id="inst-001", process_id="leave", version="1.0")
+        store.save_instance(instance)
+
+        task = TaskInstance(id="task-001", process_instance_id="inst-001", node_id="t1", assignee="alice")
+        store.save_task("inst-001", task)
+
+        # Update the task
+        task.assignee = "bob"
+        task.status = "completed"
+        store.save_task("inst-001", task)
+
+        tasks = store.get_tasks_for_instance("inst-001")
+        assert len(tasks) == 1
+        assert tasks[0].assignee == "bob"
+        assert tasks[0].status == "completed"
