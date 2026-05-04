@@ -50,7 +50,19 @@ def run(args: list[str] | None = None) -> None:
         cmd_show(engine, parsed.instance_id)
 
 
+def _safe(engine, handler, *args):
+    """包装命令处理器，捕获常见错误并输出友好提示。"""
+    try:
+        handler(*args)
+    except (FileNotFoundError, ValueError) as e:
+        print(f"错误: {e}")
+
+
 def cmd_list_processes(engine: ProcessEngine) -> None:
+    _safe(engine, _cmd_list_processes_impl, engine)
+
+
+def _cmd_list_processes_impl(engine: ProcessEngine) -> None:
     pds = engine.store.list_process_definitions()
     if not pds:
         print("暂无流程定义")
@@ -60,6 +72,10 @@ def cmd_list_processes(engine: ProcessEngine) -> None:
 
 
 def cmd_start(engine: ProcessEngine, process_id: str) -> None:
+    _safe(engine, _cmd_start_impl, engine, process_id)
+
+
+def _cmd_start_impl(engine: ProcessEngine, process_id: str) -> None:
     instance = engine.start_instance(process_id)
     print(f"流程实例已创建: {instance.id}")
     pending = engine.get_pending_tasks(instance.id)
@@ -71,12 +87,14 @@ def cmd_start(engine: ProcessEngine, process_id: str) -> None:
 
 
 def cmd_tasks(engine: ProcessEngine, instance_id: str | None) -> None:
+    _safe(engine, _cmd_tasks_impl, engine, instance_id)
+
+
+def _cmd_tasks_impl(engine: ProcessEngine, instance_id: str | None) -> None:
     if instance_id:
         instances = [engine.get_instance(instance_id)]
     else:
-        instances = []
-        for path in sorted(engine.store._instances_dir.glob("*.json")):
-            instances.append(engine.store.load_instance(path.stem))
+        instances = engine.store.list_instances()
 
     found = False
     for inst in instances:
@@ -91,6 +109,10 @@ def cmd_tasks(engine: ProcessEngine, instance_id: str | None) -> None:
 
 
 def cmd_complete(engine: ProcessEngine, task_id: str) -> None:
+    _safe(engine, _cmd_complete_impl, engine, task_id)
+
+
+def _cmd_complete_impl(engine: ProcessEngine, task_id: str) -> None:
     instance = engine.complete_task(task_id)
     print(f"任务完成")
 
@@ -104,6 +126,10 @@ def cmd_complete(engine: ProcessEngine, task_id: str) -> None:
 
 
 def cmd_show(engine: ProcessEngine, instance_id: str) -> None:
+    _safe(engine, _cmd_show_impl, engine, instance_id)
+
+
+def _cmd_show_impl(engine: ProcessEngine, instance_id: str) -> None:
     instance = engine.get_instance(instance_id)
     print(f"实例 ID: {instance.id}")
     print(f"流程定义: {instance.process_id} v{instance.version}")
@@ -111,6 +137,6 @@ def cmd_show(engine: ProcessEngine, instance_id: str) -> None:
     print(f"当前节点: {instance.current_node_id}")
     tasks = engine.store.get_tasks_for_instance(instance_id)
     if tasks:
-        print(f"任务:")
+        print("任务:")
         for t in tasks:
             print(f"  [{t.id}] {t.node_id} - {t.status} (assignee: {t.assignee})")
