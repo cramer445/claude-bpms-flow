@@ -30,28 +30,28 @@ run_tests() {
 # 1. 单元测试
 echo "=== 单元测试 ==="
 if run_tests unit; then
-    UNIT_RESULT="✅ 通过"
+    UNIT_RESULT="[PASS] 通过"
     echo ""
     echo "=== 集成测试 ==="
     if run_tests integration; then
-        INTEG_RESULT="✅ 通过"
+        INTEG_RESULT="[PASS] 通过"
         echo ""
         echo "=== 端到端测试 ==="
         if run_tests e2e; then
-            E2E_RESULT="✅ 通过"
+            E2E_RESULT="[PASS] 通过"
         else
-            E2E_RESULT="❌ 失败"
+            E2E_RESULT="[FAIL] 失败"
             OVERALL_EXIT_CODE=1
         fi
     else
-        INTEG_RESULT="❌ 失败"
-        E2E_RESULT="⏭ 跳过（集成测试未通过）"
+        INTEG_RESULT="[FAIL] 失败"
+        E2E_RESULT="[SKIP] 跳过（集成测试未通过）"
         OVERALL_EXIT_CODE=1
     fi
 else
-    UNIT_RESULT="❌ 失败"
-    INTEG_RESULT="⏭ 跳过（单元测试未通过）"
-    E2E_RESULT="⏭ 跳过（单元测试未通过）"
+    UNIT_RESULT="[FAIL] 失败"
+    INTEG_RESULT="[SKIP] 跳过（单元测试未通过）"
+    E2E_RESULT="[SKIP] 跳过（单元测试未通过）"
     OVERALL_EXIT_CODE=1
 fi
 
