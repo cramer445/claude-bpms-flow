@@ -81,3 +81,45 @@ class TestProcessDefinitionSerializer:
         assert restored.id == pd.id
         assert restored.start_node_id == pd.start_node_id
         assert isinstance(restored.nodes["t1"], UserTaskNode)
+
+    def test_description_roundtrip(self):
+        node = BaseNode(
+            id="n1",
+            name="测试节点",
+            node_type=NodeType.START,
+            description="这是一个测试节点",
+            outgoing=["t1"],
+        )
+        pd = ProcessDefinition(
+            id="p1",
+            name="测试流程",
+            version="0.1",
+            nodes={"n1": node},
+            start_node_id="n1",
+        )
+
+        data = ProcessDefinitionSerializer.serialize(pd)
+        restored = ProcessDefinitionSerializer.deserialize(data)
+
+        assert restored.nodes["n1"].description == "这是一个测试节点"
+
+    def test_candidate_groups_roundtrip(self):
+        task = UserTaskNode(
+            id="t1",
+            name="会签",
+            candidate_groups=["managers", "directors"],
+            incoming=["start"],
+            outgoing=["end"],
+        )
+        pd = ProcessDefinition(
+            id="p1",
+            name="测试流程",
+            version="0.1",
+            nodes={"start": BaseNode(id="start", name="开始", node_type=NodeType.START, outgoing=["t1"]), "t1": task, "end": BaseNode(id="end", name="结束", node_type=NodeType.END, incoming=["t1"])},
+            start_node_id="start",
+        )
+
+        data = ProcessDefinitionSerializer.serialize(pd)
+        restored = ProcessDefinitionSerializer.deserialize(data)
+
+        assert restored.nodes["t1"].candidate_groups == ["managers", "directors"]

@@ -7,13 +7,14 @@ class ProcessDefinitionSerializer:
     """流程定义 JSON 序列化器。"""
 
     @staticmethod
-    def serialize(pd: ProcessDefinition) -> dict:
+    def serialize(process_def: ProcessDefinition) -> dict:
         nodes = {}
-        for node_id, node in pd.nodes.items():
+        for node_id, node in process_def.nodes.items():
             node_data = {
                 "id": node.id,
                 "name": node.name,
                 "type": node.node_type.value,
+                "description": node.description,
                 "incoming": node.incoming,
                 "outgoing": node.outgoing,
             }
@@ -22,10 +23,10 @@ class ProcessDefinitionSerializer:
                 node_data["candidate_groups"] = node.candidate_groups
             nodes[node_id] = node_data
         return {
-            "id": pd.id,
-            "name": pd.name,
-            "version": pd.version,
-            "start_node_id": pd.start_node_id,
+            "id": process_def.id,
+            "name": process_def.name,
+            "version": process_def.version,
+            "start_node_id": process_def.start_node_id,
             "nodes": nodes,
         }
 
@@ -38,6 +39,7 @@ class ProcessDefinitionSerializer:
                 node = UserTaskNode(
                     id=node_data["id"],
                     name=node_data["name"],
+                    description=node_data.get("description", ""),
                     assignee=node_data.get("assignee"),
                     candidate_groups=node_data.get("candidate_groups", []),
                     incoming=node_data.get("incoming", []),
@@ -48,6 +50,7 @@ class ProcessDefinitionSerializer:
                     id=node_data["id"],
                     name=node_data["name"],
                     node_type=node_type,
+                    description=node_data.get("description", ""),
                     incoming=node_data.get("incoming", []),
                     outgoing=node_data.get("outgoing", []),
                 )
