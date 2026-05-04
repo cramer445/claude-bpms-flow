@@ -81,3 +81,7 @@ class TestProcessDefinition:
         process = ProcessDefinition(id="p1", name="空流程", version="0.1")
         assert process.nodes == {}
         assert process.start_node_id == ""
+
+    def test_process_definition_version(self):
+        process = ProcessDefinition(id="p1", name="流程", version="2.0")
+        assert process.version == "2.0"
