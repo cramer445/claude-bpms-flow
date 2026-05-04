@@ -49,6 +49,10 @@ class Store:
             "created_at": instance.created_at,
             "variables": instance.variables,
         }
+        # 保留已有任务数据
+        if path.exists():
+            existing = json.loads(path.read_text(encoding="utf-8"))
+            data["tasks"] = existing.get("tasks", [])
         path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
 
     def load_instance(self, instance_id: str) -> ProcessInstance:
