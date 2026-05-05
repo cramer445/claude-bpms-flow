@@ -112,6 +112,13 @@ class Store:
             ))
         return tasks
 
+    def delete_process_definition(self, process_id: str) -> None:
+        """删除指定流程定义。"""
+        path = self._processes_dir / f"{process_id}.json"
+        if not path.exists():
+            raise FileNotFoundError(f"流程定义不存在: {process_id}")
+        path.unlink()
+
     def list_instances(self) -> list[ProcessInstance]:
         """列出所有流程实例。"""
         instances = []
